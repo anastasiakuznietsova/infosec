@@ -67,11 +67,11 @@ def test_md5_hash_file_input():
     with open("labs_backend/requirements.txt", "rb") as f:
         response = client.post(
             "/md5_hash",
-            files={"input_file": ("labs_backend/requirements.txt", f, "text/plain")}
+            files={"input_file": ("requirements.txt", f, "text/plain")}
         )
     assert response.status_code == 200
     assert response.json() == {
-        'hashValue': '3baa64558028f9cb6aa4bba97947427e'
+        'hashValue': '169a9a8938127d7748bbb23217f6eb8f'
     }
 def test_check_integrity_okay_untouched():
     content = b"babak"
