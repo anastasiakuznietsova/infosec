@@ -1,21 +1,31 @@
 from math import pi, sqrt
+from config import PRNG_COMPARISON_MODULE, PRNG_MULTIPLIER,PRNG_INCREMENT,PRNG_SEED
 
 def pseudo_rand_num(n:int):
-    m = 2 ** 21 - 1
-    a = 8 ** 3
-    c = 144
-    x_0 = 3
+    m = PRNG_COMPARISON_MODULE
+    a = PRNG_MULTIPLIER
+    c = PRNG_INCREMENT
+    x_0 = PRNG_SEED
     period = 0
 
+    seq=[]
+    unique_seq = ''
     x = []
+    i=0
 
-    for i in range(n):
-        x.append(x_0)
-        x_0 = (a*x_0 + c) % m
-        if (not period) and (x_0 in x):
+    while i<n:
+        if period:
+            seq.append(unique_seq)
+            i += period
+        else:
+            x.append(x_0)
+            x_0 = (a*x_0 + c) % m
+            i+=1
+        if (~period) and (x_0 in x):
             period = len(x)
-
-    return x,period
+            unique_seq = " ".join(str(x_i) for x_i in x)
+            seq.append(unique_seq)
+    return x,period, " ".join(seq)
 
 def euclide(a,b):
     if a<b:

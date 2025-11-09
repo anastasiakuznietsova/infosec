@@ -1,0 +1,80 @@
+<div class="page-body">
+    <div class="password-container">
+        <h3>Enter a password!!</h3>
+        <input type="text" (input)="onInputChange()" [(ngModel)]="passwordKey" required [disabled]="isDisabled"
+            #passwordInput="ngModel" />
+        <span *ngIf="(passwordInput.dirty || passwordInput.touched)&&!passwordKey" class="error-message">To continue you
+            must enter the password</span>
+    </div>
+    <div class="encrypt-container">
+
+        <div class="get-your-hash-containter">
+            <h3>RC5 encryption</h3>
+            <p>Enter a string or choose a file</p>
+            <input type="text" [(ngModel)]="inputText" required [disabled]="isDisabled" />
+            <input type="file" (change)="onFileSelected($event, TypeService.Encryption)" #fileinput />
+            <div *ngIf="inputFileUrl" class="image-container">
+                <img [src]="inputFileUrl" alt="file" />
+            </div>
+            <button (click)="getRC5()" class="hash-button"
+                [disabled]="isDisabled||(!inputText && !inputFile)|| !passwordKey">Encrypt</button>
+
+            <div *ngIf="encrypted_line()" class="result-message">
+                <h3>Encrypted result</h3>
+                <div class="encrypted-message">
+                    <p>{{encrypted_line()}}</p>
+                </div>
+
+                <button (click)="openSaveParameters()" download="lab3.txt" class="button-save">Save to file</button>
+                <ng-container *ngIf="isSaveParameters">
+                    <div class="save-container">
+                        <p class="save-path file-name">Select a folder to save: <button class="color-margin"
+                                (click)="onPathSelect()">Select</button><span class="path-text">{{savePath ? savePath :
+                                'Nothing was selected'}} </span> </p>
+                        <p class="file-name">Enter the file name</p>
+                        <input type="text" [(ngModel)]="fileName_encr" [disabled]="!savePath" />
+                        <button (click)="saveFile(TypeService.Encryption)" class="button-save select"
+                            [disabled]="!fileName_encr">Save</button>
+                    </div>
+                </ng-container>
+            </div>
+        </div>
+        <img class="loading" *ngIf="isDisabled" src="assets/loading.gif" alt="loading" />
+
+
+
+        <div class="get-your-hash-containter">
+            <h3>RC5 decryption</h3>
+            <label>Select a file with encrypted value</label>
+            <input type="file" (change)="onFileSelected($event, TypeService.Decryption)" #decryptFileInput />
+            <button (click)="getRC5Decryption()" class="integrity-button"
+                [disabled]="isDisabled||!decryptFile || !passwordKey">Decrypt</button>
+
+            <div *ngIf="decrypted_file" class="result-message">
+                <h4>Your file was successfully decripted</h4>
+                <div *ngIf="decrypted_line()">
+                    <h4>Your decrypted message</h4>
+                    <p>{{decrypted_line()}}</p>
+                </div>
+                <div *ngIf="decrypted_file_link" class="image-container">
+                    <img [src]="decrypted_file_link" alt="decrypted file" />
+                </div>
+                <p>You can save it by clicking on this button</p>
+                <button (click)="openSaveParameters()" download="lab3.txt" class="button-save">Save to file</button>
+                <ng-container *ngIf="isSaveParameters">
+                    <div class="save-container">
+                        <p class="save-path file-name">Select a folder to save: <button class="color-margin"
+                                (click)="onPathSelect()">Select</button><span class="path-text">{{savePath ? savePath :
+                                'Nothing was selected'}} </span> </p>
+                        <p class="file-name">Enter the file name</p>
+                        <input type="text" [(ngModel)]="fileName_decr" [disabled]="!savePath" />
+                        <button (click)="saveFile(TypeService.Decryption)" class="button-save select"
+                            [disabled]="!fileName_decr">Save</button>
+                    </div>
+                </ng-container>
+            </div>
+
+            <p class="error-message" *ngIf="errorDecryption">{{errorDecryption}}</p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  backend:
+    build: ./labs_backend
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./labs_UI
+    container_name: angular_app
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend

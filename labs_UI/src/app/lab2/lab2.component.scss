@@ -1,0 +1,132 @@
+.page-body {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: "Inter", Arial, sans-serif;
+    color: #333;
+    display:flex;
+    flex-direction:row;
+    align-items: center;
+    justify-content: space-between;
+
+    h3 {
+        margin-top: 2rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #222;
+    }
+
+    label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .get-your-hash-containter {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    .error-message{
+        color: red;
+        font-weight:700;
+    }
+
+    input[type="text"]:focus {
+        border-color: #4a90e2;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    }
+
+    input[type="text"],
+    input[type="file"] {
+        width: 100%;
+        max-width: 300px;
+        padding: 0.6rem 1rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s ease;
+        margin-bottom: 1rem;
+    }
+
+    input:disabled {
+        background-color: #e5e5e5;
+    }
+
+    .integrity-test {
+        color: #3a7bd5;
+        font-weight: 700;
+        text-align: center;
+        font-size:17px;
+    }
+
+    .hash-button,
+    .button-save,
+    .color-margin,
+    .integrity-button {
+        margin: 1rem 0.5rem 0 0;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 8px;
+        background-color: #4a90e2;
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover,
+        &:active {
+            background-color: #3a7bd5;
+        }
+
+        &:disabled {
+            background-color: #767676;
+            cursor: default;
+        }
+    }
+
+    .color-margin {
+        margin: 1rem 0.5rem 0 0;
+        padding: 0.2rem 0.8rem;
+        font-size: 0.95rem;
+        font-weight: 300;
+    }
+
+    .save-container {
+        padding: 10px 20px;
+        border-radius: 4px;
+        background-color: #ffffff;
+        border: 1px solid #adadad;
+        margin-top: 1rem;
+
+        .file-name,
+        .path-text {
+            display: block;
+            margin: 0.5rem 0;
+        }
+    }
+
+    p {
+        margin: 0.5rem 0;
+        line-height: 1.5;
+    }
+
+    .path-text {
+        color: #5d5d5d;
+        font-size: 14px;
+    }
+}
+
+.loading {
+    display: block;
+    width: 100px;
+    height: auto;
+    margin: 50px auto;
+}

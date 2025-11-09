@@ -1,7 +1,6 @@
 import { inject, Injectable } from "@angular/core";
 import { HttpClient } from '@angular/common/http';
 import { RandNum, TestGenerator } from "../labs.interfaces";
-import { take } from "rxjs";
 
 @Injectable({providedIn: 'root'})
 export class Lab1Service {
