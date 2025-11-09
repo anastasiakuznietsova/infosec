@@ -56,7 +56,6 @@ def test_md5_hash_lab_cases():
     assert client.post("md5_hash", data={"input_str": "abcdefghijklmnopqrstuvwxyz"}).json() == {"hashValue": "c3fcd3d76192e4007dfb496cca67e13b"}
     assert client.post("md5_hash", data={"input_str": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"}).json() == {"hashValue": "d174ab98d277d9f5a5611c2c9f419d9f"}
     assert client.post("md5_hash", data={"input_str": "12345678901234567890123456789012345678901234567890123456789012345678901234567890"}).json() == {"hashValue": "57edf4a22be3c955ac49da2e2107b67a"}
-
 def test_md5_hash_without_input():
     response = client.post("md5_hash", data={})
     assert response.status_code == 400
@@ -67,7 +66,7 @@ def test_md5_hash_file_input():
     with open("labs_backend/requirements.txt", "rb") as f:
         response = client.post(
             "/md5_hash",
-            files={"input_file": ("requirements.txt", f, "text/plain")}
+            files={"input_file": ("labs_backend/requirements.txt", f, "text/plain")}
         )
     assert response.status_code == 200
     assert response.json() == {
