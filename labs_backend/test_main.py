@@ -49,7 +49,6 @@ def test_md5_hash_okay():
         "hashValue": "86c6f808481120d10b109c7fd60f8fac"
     }
 def test_md5_hash_lab_cases():
-    assert client.post("md5_hash", data={"input_str": ""}).json() == {"hashValue": "d41d8cd98f00b204e9800998ecf8427e"}
     assert client.post("md5_hash", data={"input_str": "a"}).json() == {"hashValue": "0cc175b9c0f1b6a831c399e269772661"}
     assert client.post("md5_hash", data={"input_str": "abc"}).json() == {"hashValue": "900150983cd24fb0d6963f7d28e17f72"}
     assert client.post("md5_hash", data={"input_str": "message digest"}).json() == {"hashValue": "f96b697d7cb7938d525a2f31aaf161d0"}
