@@ -55,10 +55,10 @@ def test_md5_hash_without_input():
         "detail":"Input wasn’t provided"
     }
 def test_md5_hash_file_input():
-    with open("requirements.txt", "rb") as f:
+    with open("labs_backend/requirements.txt", "rb") as f:
         response = client.post(
             "/md5_hash",
-            files={"input_file": ("requirements.txt", f, "text/plain")}
+            files={"input_file": ("labs_backend/requirements.txt", f, "text/plain")}
         )
     assert response.status_code == 200
     assert response.json() == {
@@ -255,7 +255,7 @@ def test_rsa_encrypt_file_okay(tmp_path):
     public_key_path = tmp_path / "public_key.pem"
     public_key_path.write_bytes(public_res.content)
 
-    with open(public_key_path, "rb") as pub_key, open("requirements.txt", "rb") as input_f:
+    with open(public_key_path, "rb") as pub_key, open("labs_backend/requirements.txt", "rb") as input_f:
         files = {
             "public_file": ("public.pem", pub_key, "application/octet-stream"),
             "input_file": ("input.txt", input_f, "text/plain")
@@ -297,7 +297,7 @@ def test_rsa_decrypt_file_okay(tmp_path):
     public_key_path = tmp_path / "public_key.pem"
     public_key_path.write_bytes(public_res.content)
 
-    with open(public_key_path, "rb") as pub_key, open("requirements.txt", "rb") as input_f:
+    with open(public_key_path, "rb") as pub_key, open("labs_backend/requirements.txt", "rb") as input_f:
         files = {
             "public_file": ("public.pem", pub_key, "application/octet-stream"),
             "input_file": ("input.txt", input_f, "text/plain")
