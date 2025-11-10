@@ -3,9 +3,9 @@ from fastapi import FastAPI, HTTPException, File, Form, UploadFile,status, Respo
 import filetype
 import random
 from fastapi.middleware.cors import CORSMiddleware
-import tempfile
 import aiofiles
 from config import CHECK_HEADER_RC5, ERROR_MSGS_BACKEND, MEDIA_TYPES
+from utils.digital_signature import signature_get_private_key, signature_get_public_key, get_signature, verify_signature_okay
 from utils.rand_num_gen import pseudo_rand_num, to_test_generator
 from utils.md5 import start_hashing,compare_hash
 
@@ -313,8 +313,6 @@ async def rsa_decrypt_file(
         await f.write(plaintext)
         temp_path = f.name
     return FileResponse(path=temp_path, filename=f"decrypted_file{file_extention}", media_type=media_type)
-
-
 
 @app.get("/signature/get_private_key")
 async def lab5_get_private_key():
