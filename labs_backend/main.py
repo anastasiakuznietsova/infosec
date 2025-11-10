@@ -313,3 +313,127 @@ async def rsa_decrypt_file(
         await f.write(plaintext)
         temp_path = f.name
     return FileResponse(path=temp_path, filename=f"decrypted_file{file_extention}", media_type=media_type)
+
+
+
+@app.get("/signature/get_private_key")
+async def lab5_get_private_key():
+    private_key = signature_get_private_key()
+    try:
+        async with aiofiles.tempfile.NamedTemporaryFile(suffix=".pem", mode='wb',delete=False) as f:
+            await f.write(private_key)
+            temp_path = f.name
+        return FileResponse(path=temp_path, filename="private_key.pem")
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Couldn't write the key to a file"
+        )
+@app.post("/signature/get_public_key")
+async def lab5_get_public_key(
+        private_file:UploadFile = File(None)
+):
+    try:
+        private_key = await private_file.read()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MSGS_BACKEND['INCORRECT_PASSWORD_FORMAT']
+        )
+    public_key = signature_get_public_key(private_key)
+    try:
+        async with aiofiles.tempfile.NamedTemporaryFile(suffix=".pem", mode='wb',delete=False) as f:
+            await f.write(public_key)
+            temp_path = f.name
+        return FileResponse(path=temp_path, filename="public_key.pem")
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Couldn't write the key to a file"
+        )
+
+@app.post("/signature/get_signature")
+async def lab5_get_signature(
+        private_file:UploadFile = File(None),
+        text_to_sign:str=Form(None),
+        file_to_sign: UploadFile = File(None)
+):
+    try:
+        private_key = await private_file.read()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MSGS_BACKEND['INCORRECT_PASSWORD_FORMAT']
+        )
+    if file_to_sign is not None:
+        try:
+            data_bytes = await file_to_sign.read()
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MSGS_BACKEND['DAMAGED_OR_EMPTY_FILE']
+            )
+    else:
+        try:
+            data_bytes = text_to_sign.encode('utf-8')
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MSGS_BACKEND['NO_INPUT']
+            )
+    signature = get_signature(private_key,data_bytes).hex()
+    try:
+        async with aiofiles.tempfile.NamedTemporaryFile(suffix=".txt", mode='w',delete=False) as f:
+            await f.write(signature)
+            temp_path = f.name
+        return FileResponse(path=temp_path, filename="signature.txt")
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Couldn't write the signature to a file"
+        )
+
+@app.post("/signature/verify_signature")
+async def lab5_verify_signature(
+        public_file:UploadFile = File(None),
+        signature_file:UploadFile = File(None),
+        text_to_sign:str=Form(None),
+        file_to_sign: UploadFile = File(None)
+):
+    try:
+        public_key = await public_file.read()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MSGS_BACKEND['INCORRECT_PASSWORD_FORMAT']
+        )
+    try:
+        signature_hex = (await signature_file.read()).decode().strip()
+        signature = bytes.fromhex(signature_hex)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MSGS_BACKEND['DAMAGED_OR_EMPTY_FILE']
+        )
+    if file_to_sign is not None:
+        try:
+            data_bytes = await file_to_sign.read()
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MSGS_BACKEND['DAMAGED_OR_EMPTY_FILE']
+            )
+    else:
+        try:
+            data_bytes = text_to_sign.encode('utf-8')
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MSGS_BACKEND['NO_INPUT']
+            )
+    verification_status = verify_signature_okay(data_bytes,signature,public_key)
+    return {
+        'verification_status': 'Digital signature is valid' if verification_status else 'Digital signature is invalid',
+        'valid': verification_status
+    }
+
