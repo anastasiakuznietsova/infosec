@@ -345,3 +345,170 @@ def test_rsa_decrypt_file_no_file():
     response = client.post("/rsa/decrypt_file", data={"password": "mybabak"}, files={})
     assert response.status_code == 400
     assert response.json() == {"detail": "File is damaged or empty"}
+def test_signature_get_private_key_success(tmp_path):
+    response = client.get("/signature/get_private_key")
+    assert response.status_code == 200
+    assert response.headers["content-disposition"].startswith("attachment; filename=")
+    assert b"BEGIN PRIVATE KEY" in response.content or b"BEGIN EC PRIVATE KEY" in response.content
+def test_signature_get_public_key_success(tmp_path):
+    private_key_res = client.get("/signature/get_private_key")
+    assert private_key_res.status_code == 200
+    private_key_path = tmp_path / "private_key.pem"
+    private_key_path.write_bytes(private_key_res.content)
+    with open(private_key_path, "rb") as f:
+        files = {"private_file": ("private_key.pem", f, "application/octet-stream")}
+        response = client.post("/signature/get_public_key", files=files)
+    assert response.status_code == 200
+    assert response.headers["content-disposition"].startswith("attachment; filename=")
+    assert b"BEGIN PUBLIC KEY" in response.content
+def test_signature_get_public_key_missing_file():
+    response = client.post("/signature/get_public_key", files={})
+    assert response.status_code == 400
+    assert "INCORRECT_PASSWORD_FORMAT" in response.text or "detail" in response.json()
+def test_signature_get_signature_text_success(tmp_path):
+    private_key_res = client.get("/signature/get_private_key")
+    assert private_key_res.status_code == 200
+    private_key_path = tmp_path / "private_key.pem"
+    private_key_path.write_bytes(private_key_res.content)
+
+    with open(private_key_path, "rb") as pk:
+        response = client.post(
+            "/signature/get_signature",
+            data={"text_to_sign": "BABAK"},
+            files={"private_file": ("private_key.pem", pk, "application/octet-stream")}
+        )
+    assert response.status_code == 200
+    assert response.headers["content-disposition"].startswith("attachment; filename=")
+    content = response.content.decode()
+    assert len(content) > 0
+def test_signature_get_signature_file_success(tmp_path):
+    private_key_res = client.get("/signature/get_private_key")
+    assert private_key_res.status_code == 200
+    private_key_path = tmp_path / "private_key.pem"
+    private_key_path.write_bytes(private_key_res.content)
+
+    file_content = b"babak"
+    file_path = tmp_path / "test.txt"
+    file_path.write_bytes(file_content)
+
+    with open(private_key_path, "rb") as pk, open(file_path, "rb") as f:
+        response = client.post(
+            "/signature/get_signature",
+            files={
+                "private_file": ("private_key.pem", pk, "application/octet-stream"),
+                "file_to_sign": ("test.txt", f, "application/octet-stream")
+            }
+        )
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert len(content) > 0
+def test_signature_get_signature_no_input(tmp_path):
+    private_key_res = client.get("/signature/get_private_key")
+    assert private_key_res.status_code == 200
+    private_key_path = tmp_path / "private_key.pem"
+    private_key_path.write_bytes(private_key_res.content)
+
+    with open(private_key_path, "rb") as pk:
+        response = client.post(
+            "/signature/get_signature",
+            files={"private_file": ("private_key.pem", pk, "application/octet-stream")}
+        )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Input wasn’t provided"
+def get_verify_data(tmp_path, line_input):
+    private_key_res = client.get("/signature/get_private_key")
+    private_key_path = tmp_path / "private_key.pem"
+    private_key_path.write_bytes(private_key_res.content)
+
+    with open(private_key_path, "rb") as f:
+        files = {"private_file": ("private_key.pem", f, "application/octet-stream")}
+        public_key_res = client.post("/signature/get_public_key", files=files)
+    public_key_path = tmp_path / "public_key.pem"
+    public_key_path.write_bytes(public_key_res.content)
+
+    with open(private_key_path, "rb") as pk:
+        signature_res = client.post(
+            "/signature/get_signature",
+            data={"text_to_sign": line_input},
+            files={"private_file": ("private_key.pem", pk, "application/octet-stream")}
+        )
+    assert signature_res.status_code == 200
+    signature_path = tmp_path / "signature.txt"
+    signature_path.write_bytes(signature_res.content)
+
+    return private_key_path, public_key_path, signature_path, b"BABAK"
+def test_verify_signature_success(tmp_path):
+    line_input = "BABAK"
+    _, public_key, signature_hex, _ = get_verify_data(tmp_path,line_input)
+    with open(public_key, "rb") as pk, open(signature_hex, "rb") as sig:
+        response = client.post(
+            "/signature/verify_signature",
+            data={"text_to_sign": line_input},
+            files={
+                "public_file": ("public_key.pem", pk, "application/octet-stream"),
+                "signature_file": ("signature.txt", sig, "text/plain")
+            }
+        )
+    assert response.status_code == 200
+    json_resp = response.json()
+    assert json_resp["valid"] is True
+    assert json_resp["verification_status"] == "Digital signature is valid"
+def test_verify_signature_invalid_signature(tmp_path):
+    line_input = "BABAK"
+    _, public_key, _, _ = get_verify_data(tmp_path,line_input)
+    _, _, signature_hex_bad, _ = get_verify_data(tmp_path,"NOTBABAK")
+
+    with open(public_key, 'rb') as pk, open(signature_hex_bad, 'rb') as sig:
+        response = client.post(
+            "/signature/verify_signature",
+            data={"text_to_sign": line_input},
+            files={
+                "public_file": ("public_key.pem", pk, "application/octet-stream"),
+                "signature_file": ("signature.txt", sig, "text/plain")
+            }
+        )
+    assert response.status_code == 200
+    json_resp = response.json()
+    assert json_resp["valid"] is False
+    assert json_resp["verification_status"] == "Digital signature is invalid"
+def test_verify_signature_missing_input(tmp_path):
+    line_input="BABAK"
+    _, public_key, signature_hex, _ = get_verify_data(tmp_path,line_input)
+
+    with open(public_key,'rb') as pk, open(signature_hex,'rb') as sig:
+        response = client.post(
+            "/signature/verify_signature",
+            files={
+                "public_file": ("public_key.pem", pk, "application/octet-stream"),
+                "signature_file": ("signature.txt", sig, "text/plain")
+            }
+        )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Input wasn’t provided"
+def test_verify_signature_bad_public_file(tmp_path):
+    line_input = "BABAK"
+    _, _, signature_hex, _ = get_verify_data(tmp_path, line_input)
+    with open(signature_hex, 'rb') as sig:
+        response = client.post(
+            "/signature/verify_signature",
+            data={"text_to_sign": line_input},
+            files={
+                "signature_file": ("signature.txt", sig, "text/plain")
+            }
+        )
+    assert response.status_code == 400
+    assert "Incorrect password format" in response.json()["detail"]
+def test_verify_signature_bad_signature_file(tmp_path):
+    line_input = "BABAK"
+    _, public_key, _, _ = get_verify_data(tmp_path, line_input)
+    with open(public_key, 'rb') as pk:
+        response = client.post(
+                "/signature/verify_signature",
+                data={"text_to_sign": line_input},
+                files={
+                    "public_file": ("public_key.pem", pk, "application/octet-stream")
+                }
+            )
+    assert response.status_code == 400
+    assert "File is damaged or empty" in response.json()["detail"]
+    
